@@ -1,4 +1,0 @@
-import happybase
-
-
-conn = happybase()
