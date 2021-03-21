@@ -101,21 +101,30 @@ class Neighborhood(Location, DetailInfo):
 
 @dataclass
 class Xpath:
-    district: Optional[str] = "/html/body/div[3]/div[1]/dl[2]/dd/div/div/a[position()<=last()]"
-    county: Optional[str] = "/html/body/div[3]/div[1]/dl[2]/dd/div/div[2]/a[position()<=last()]"
+    district: Optional[
+        str] = "/html/body/div[3]/div[1]/dl[2]/dd/div/div/a[position()<=last()]"
+    county: Optional[
+        str] = "/html/body/div[3]/div[1]/dl[2]/dd/div/div[2]/a[position()<=last()]"
     total_page: Optional[str] = "/html/body/div[4]/div[1]/div[3]/div[2]/div"
     neighborhood: Optional[
         str] = "/html/body/div[4]/div[1]/ul/li[position()<=last()]/div[1]/div[1]/a"
-    building_age: Optional[str] = "/html/body/div[6]/div[2]/div[2]/div[1]/span[2]"
-    building_types: Optional[str] = "/html/body/div[6]/div[2]/div[2]/div[2]/span[2]"
-    property_cost: Optional[str] = "/html/body/div[6]/div[2]/div[2]/div[3]/span[2]"
-    property_company: Optional[str] = "/html/body/div[6]/div[2]/div[2]/div[4]/span[2]"
-    property_developers: Optional[str] = "/html/body/div[6]/div[2]/div[2]/div[5]/span[2]"
-    num_building: Optional[str] = "/html/body/div[6]/div[2]/div[2]/div[6]/span[2]"
+    building_age: Optional[
+        str] = "/html/body/div[6]/div[2]/div[2]/div[1]/span[2]"
+    building_types: Optional[
+        str] = "/html/body/div[6]/div[2]/div[2]/div[2]/span[2]"
+    property_cost: Optional[
+        str] = "/html/body/div[6]/div[2]/div[2]/div[3]/span[2]"
+    property_company: Optional[
+        str] = "/html/body/div[6]/div[2]/div[2]/div[4]/span[2]"
+    property_developers: Optional[
+        str] = "/html/body/div[6]/div[2]/div[2]/div[5]/span[2]"
+    num_building: Optional[
+        str] = "/html/body/div[6]/div[2]/div[2]/div[6]/span[2]"
     num_house: Optional[str] = "/html/body/div[6]/div[2]/div[2]/div[7]/span[2]"
     unit_price: Optional[str] = "/html/body/div[6]/div[2]/div[1]/div/span[1]"
     lng_lat_script: Optional[str] = "/html/body/script[9]/text()"
-    lng_lat: Optional[str] = "//property[@name = 'resblockPosition']/string/text()"
+    lng_lat: Optional[
+        str] = "//property[@name = 'resblockPosition']/string/text()"
     address: Optional[str] = "/html/body/div[4]/div/div[1]/div"
 
 
@@ -138,12 +147,14 @@ class NeighborhoodSpider:
 
     def get_districts(self):
         selector = etree.HTML(requests_get(self.sub_domain).text)
-        return [Region(item.text, item.attrib["href"]) for item in selector.xpath(Xpath.district)]
+        return [Region(item.text, item.attrib["href"]) for item in
+                selector.xpath(Xpath.district)]
 
     def get_counties(self, region: Region):
         url = self.domain + region.url
         selector = etree.HTML(requests_get(url).text)
-        return [Region(item.text, item.attrib["href"]) for item in selector.xpath(Xpath.county)]
+        return [Region(item.text, item.attrib["href"]) for item in
+                selector.xpath(Xpath.county)]
 
     def get_total_page(self, region: Region):
         try:
@@ -158,7 +169,8 @@ class NeighborhoodSpider:
     @staticmethod
     def get_neighborhood_from_current_page(url):
         selector = etree.HTML(requests_get(url).text)
-        return [Neighborhood(name=item.text, url=item.attrib["href"]) for item in
+        return [Neighborhood(name=item.text, url=item.attrib["href"]) for item
+                in
                 selector.xpath(Xpath.neighborhood)]
 
     @staticmethod
@@ -238,8 +250,7 @@ class NeighborhoodSpider:
                 for page in range(1, total_page + 1):
                     page_url = f"{self.domain}{county.url}pg{page}"
                     try:
-                        neighborhood_list = self.get_neighborhood_from_current_page(
-                            page_url)
+                        neighborhood_list = self.get_neighborhood_from_current_page(page_url)
                     except Exception as err:
                         logger.error("获取页面小区列表错误", err)
                         time.sleep(8)  # 5
@@ -249,8 +260,7 @@ class NeighborhoodSpider:
                             neighborhood.county = county.name
                             neighborhood.district = district.name
                             neighborhood.city_name = self.city_zh_name
-                            neighborhood = self.get_neighborhood_detail_info(
-                                neighborhood)
+                            neighborhood = self.get_neighborhood_detail_info(neighborhood)
                             logger.info(neighborhood)
                             self.save_json(neighborhood.as_dict(), save_path)
                             time.sleep(5)  # 3
@@ -262,9 +272,11 @@ class NeighborhoodSpider:
 
 @click.command()
 @click.option("--city_zh_name", help="The chinese city name", default="北京")
-@click.option("--city_abbreviation", help="A brief spelling of Chinese city names", default="bj")
+@click.option("--city_abbreviation",
+              help="A brief spelling of Chinese city names", default="bj")
 def main(city_abbreviation, city_zh_name):
-    NeighborhoodSpider(city_abbreviation=city_abbreviation, city_zh_name=city_zh_name).start_crawler()
+    NeighborhoodSpider(city_abbreviation=city_abbreviation,
+                       city_zh_name=city_zh_name).start_crawler()
 
 
 if __name__ == '__main__':

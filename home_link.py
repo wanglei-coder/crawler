@@ -295,8 +295,7 @@ class HomeLinkSpider:
                         house_info = self.get_house_all_info(house)
                         if not house_info:
                             continue
-                        self.save_json(
-                            house_info, f"{self.city_abbreviation}.txt")
+                        self.save_json(house_info, f"{self.city_abbreviation}.txt")
                         print(house_info)
                         time.sleep(2)
 
