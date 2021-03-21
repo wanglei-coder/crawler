@@ -1,0 +1,4 @@
+import happybase
+
+
+conn = happybase()
