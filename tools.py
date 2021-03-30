@@ -8,9 +8,10 @@ Created on 2020/7/7 11:54
 
 @ModifyRecord:
 """
+import json
 import random
-import requests
 
+import requests
 from retry import retry
 
 ProxyPoolUrl = 'http://62.234.77.96:5555/random'
@@ -78,3 +79,18 @@ def requests_get(url):
     if response.status_code != requests.codes.ok:
         raise Exception('request_get error!!!!')
     return response
+
+
+def save_json(mapping, save_path):
+    """ 保存成json"""
+    if not isinstance(mapping, str):
+        mapping = json.dumps(mapping)
+    with open(save_path, "a+") as fd:
+        fd.write(mapping + "\n")
+
+
+def bulk_save_json(records, save_path):
+    with open(save_path, "a+") as fd:
+        for record in records:
+            record = json.dumps(record)
+            fd.write(record + "\n")
