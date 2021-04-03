@@ -28,6 +28,7 @@ def get_all_city_names():
         if "city=" in elem.__str__():
             city_names.append(elem.text)
     city_names = list(set(city_names))
+    city_names.sort()
     return city_names
 
 
