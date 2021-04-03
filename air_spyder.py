@@ -107,7 +107,10 @@ class AirSpyder:
             logger.info(df)
             df["city"] = self.city_name
             save_path = os.path.join(self.dirname, self.city_name + ".csv")
-            df.to_csv(save_path, mode="a", index=None)
+            if os.path.exists(save_path):
+                df.to_csv(save_path, mode="a", index=None, header=False)
+            else:
+                df.to_csv(save_path, mode="a", index=None, header=True)
             logger.success(f"[City]: {self.city_name}   [Date]:{date}    [DONE]")
         else:
             logger.success(f"[City]: {self.city_name}   [Date]:{date}    [None]")
@@ -152,13 +155,16 @@ def main(city_name, start_time, stop_time, dirname, alone):
     python air_spyder.py --alone all
     """
     if alone == "one":
-        AirSpyder(city_name, start_time, stop_time, dirname).start_crawler()
+        spyder = AirSpyder(city_name, start_time, stop_time, dirname)
+        spyder.start_crawler()
+        spyder.browser.close()
     else:
         city_names = get_all_city_names()
         logger.info(city_names)
-        raise
         for city_name in city_names:
-            AirSpyder(city_name, start_time, stop_time, dirname).start_crawler()
+            spyder = AirSpyder(city_name, start_time, stop_time, dirname)
+            spyder.start_crawler()
+            spyder.browser.close()
 
 
 if __name__ == '__main__':
