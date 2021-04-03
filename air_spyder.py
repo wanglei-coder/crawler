@@ -5,6 +5,7 @@ import time
 
 import click
 import pandas as pd
+from bs4 import BeautifulSoup
 from loguru import logger
 from lxml import etree
 from selenium import webdriver
@@ -17,6 +18,17 @@ def date_range(start, end, step=1, format="%Y%m"):
     days = (strptime(end, format) - strptime(start, format)).days
     return set([strftime(strptime(start, format) + datetime.timedelta(i), format) for i in
                 range(0, days, step)])
+
+
+def get_all_city_names():
+    city_names = []
+    html = requests_get("https://www.aqistudy.cn/historydata/daydata.php").text
+    soup = BeautifulSoup(html, 'html.parser')
+    for elem in soup.find_all('a'):
+        if "city=" in elem.__str__():
+            city_names.append(elem.text)
+    city_names = list(set(city_names))
+    return city_names
 
 
 class AirSpyder:
@@ -114,7 +126,8 @@ class AirSpyder:
 @click.option("--start_time", help="开始日期", default=None)
 @click.option("--stop_time", help="结束日期", default=None)
 @click.option("--dirname", help="Save dirname", default=".")
-def main(city_name, start_time, stop_time, dirname):
+@click.option("--alone", help="", default="one")
+def main(city_name, start_time, stop_time, dirname, alone):
     """
     1. 需要安装selenium，pip install selenium
 
@@ -131,8 +144,21 @@ def main(city_name, start_time, stop_time, dirname):
     - 不指定日期
 
     python air_spyder.py --city_name "北京"
+
+    - 爬所有城市
+
+    python air_spyder.py --start_time 201409 --stop_time 201607 --alone all
+
+    python air_spyder.py --alone all
     """
-    AirSpyder(city_name, start_time, stop_time, dirname).start_crawler()
+    if alone == "one":
+        AirSpyder(city_name, start_time, stop_time, dirname).start_crawler()
+    else:
+        city_names = get_all_city_names()
+        logger.info(city_names)
+        raise
+        for city_name in city_names:
+            AirSpyder(city_name, start_time, stop_time, dirname).start_crawler()
 
 
 if __name__ == '__main__':
