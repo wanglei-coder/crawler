@@ -3,6 +3,7 @@ import time
 import click
 from loguru import logger
 
+from convert_json_to_excel import main as formater
 from home_link import HomeLinkSpider
 
 
@@ -42,6 +43,7 @@ class HomeLinkSpiderV1(HomeLinkSpider):
                             house.county = county.name
                             self.url_set.add(house.url)
                             self.url_list.append(house)
+                    time.sleep(4)
 
     def start_crawler(self):
         self.get_url_list()
@@ -50,6 +52,8 @@ class HomeLinkSpiderV1(HomeLinkSpider):
             self.save_json(house_info, f"{self.city_abbreviation}.txt")
             logger.info(house_info)
             time.sleep(4)
+        logger.info("save to csv file...")
+        formater(path=f"{self.city_abbreviation}.txt", typ="ershoufang", save_file_type="csv")
 
 
 @click.command()
