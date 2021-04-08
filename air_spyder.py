@@ -40,6 +40,7 @@ class AirSpyder:
         self.stop_time = stop_time
         self.domain = "https://www.aqistudy.cn/historydata/daydata.php?city={}&month={}"
         option = webdriver.ChromeOptions()
+        option.add_argument('--headless')
         option.add_argument("start-maximized")
         option.add_argument("--disable-blink-features=AutomationControlled")
         option.add_experimental_option("excludeSwitches", ["enable-automation"])

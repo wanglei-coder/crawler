@@ -8,18 +8,18 @@ Created on 2020/7/7 13:31
 
 @ModifyRecord:
 """
-import time
 import json
-import js2xml
-import click
-
-from typing import List, Optional
+import time
 from dataclasses import dataclass
-from lxml import etree
-from tools import requests_get
+from typing import List, Optional
+
+import click
+import js2xml
 from loguru import logger
+from lxml import etree
 
 from config import PATTERN
+from tools import requests_get
 
 
 # //*[@id="introduction"]/div[1]/div[1]/div[2]/ul/li[position()<=last()
@@ -30,14 +30,17 @@ class Region:
     url: str
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=False)
 class House:
     """房间网页完整地址， 标题，小区名字"""
-    url: str
-    title: str
-    block_name: str
+    url: str = ""
+    title: str = ""
+    block_name: str = ""
     district: Optional[str] = None
     county: Optional[str] = None
+
+    def __hash__(self):
+        return hash(self.url)
 
 
 class HomeLinkSpider:
