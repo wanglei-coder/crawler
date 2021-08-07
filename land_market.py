@@ -6,7 +6,8 @@ import requests
 import copy
 import pandas as pd
 import click
-
+import pefile
+pefile.RESOURCE_TYPE
 from bs4 import BeautifulSoup
 from lxml import etree
 from selenium import webdriver
@@ -215,9 +216,12 @@ class LandMarketCrawler:
         self.browser.get(self.domain)
 
     def click_page(self, page):
-        self.page = page
-        self.browser.execute_script(
-            "QueryAction.GoPage('TAB',{})".format(page))
+        try:
+            self.page = page
+            self.browser.execute_script(
+                "QueryAction.GoPage('TAB',{})".format(page))
+        except Exception as err:
+            print("failed to QueryAction.GoPage('TAB',{})".format(page), err)
 
     def click_next_page(self):
         self.page += 1
@@ -240,7 +244,7 @@ class LandMarketCrawler:
         urls = []
         for page in range(self.start_page, self.end_page):
             self.click_page(page)
-            time.sleep(0.5)
+            time.sleep(1)
             urls.extend(self.get_url())
         for url in urls:
             d = TableParser(url).extract()
