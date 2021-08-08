@@ -16,11 +16,11 @@ from typing import List, Optional
 
 import click
 import js2xml
+import requests
 from loguru import logger
 from lxml import etree
 
 from config import PATTERN
-from tools import requests_get
 
 
 # //*[@id="introduction"]/div[1]/div[1]/div[2]/ul/li[position()<=last()
@@ -61,7 +61,7 @@ class HomeLinkSpider:
         if isinstance(url, etree._Element):
             return url
         if isinstance(url, str):
-            html = requests_get(url).text
+            html = requests.get(url).text
             return etree.HTML(html)
         raise TypeError(url)
 

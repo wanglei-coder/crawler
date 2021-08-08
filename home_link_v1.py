@@ -1,13 +1,13 @@
-import time
 import json
-import redis
+import time
+from dataclasses import asdict
 
 import click
+import redis
 from loguru import logger
 
-from convert_json_to_excel import main as custom_format
+from convert_json_to_excel import custom_format
 from home_link import HomeLinkSpider, House
-from dataclasses import asdict
 
 RedisHost = "139.198.190.139"
 RedisPort = 6379
@@ -16,7 +16,7 @@ RedisDB = 0
 
 
 class HomeLinkSpiderV1(HomeLinkSpider):
-    def __init__(self, city_abbreviation="km", use_redis=True):
+    def __init__(self, city_abbreviation="km", use_redis=False):
         self.url_list = []
         self.url_set = set()
         super(HomeLinkSpiderV1, self).__init__(city_abbreviation)
@@ -66,7 +66,8 @@ class HomeLinkSpiderV1(HomeLinkSpider):
     def get_url_list_path(self):
         try:
             return self.city_abbreviation + "_url_list.json"
-        except:
+        except Exception as err:
+            logger.info(err)
             return "url_list.json"
 
     def save_house_json(self, house: House):
@@ -74,11 +75,15 @@ class HomeLinkSpiderV1(HomeLinkSpider):
             house = asdict(house)
         if isinstance(house, dict):
             self.save_json(house, self.get_url_list_path())
+            logger.success(f"store house to file: {house}")
 
     def save_house_redis(self, house):
 
         if self.redis_client is None:
-            self.redis_client = redis.Redis(host=RedisHost, password=RedisPassword, port=RedisPort, db=RedisDB)
+            self.redis_client = redis.Redis(host=RedisHost,
+                                            password=RedisPassword,
+                                            port=RedisPort,
+                                            db=RedisDB)
 
         if not hasattr(self.redis_client, "ping"):
             return
@@ -90,6 +95,7 @@ class HomeLinkSpiderV1(HomeLinkSpider):
             house = asdict(house)
         try:
             self.redis_client.lpush(self.city_abbreviation, json.dumps(house))
+            logger.success(f"store house to redis: {house}")
         except Exception as err:
             logger.error(f"failed to push redis: {house}, err: {err}")
 
@@ -101,6 +107,7 @@ class HomeLinkSpiderV1(HomeLinkSpider):
                           district=house.get("district", ""),
                           county=house.get("county", "")
                           )
+
         if not isinstance(house, House):
             return
 
@@ -120,7 +127,6 @@ class HomeLinkSpiderV1(HomeLinkSpider):
         self.get_url_list()
         length = len(self.url_list)
         logger.info(f"self.url_list: {length}")
-        logger.info("save url list")
 
         self.start_crawler_house_list(self.url_list)
 
@@ -178,4 +184,8 @@ def main(city_abbreviation, source, file, start, end):
 
 if __name__ == '__main__':
     main()
+# python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 60000
+# python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 2400 --end 20000
+# python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 40000 --end 60000
+# python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 20000 --end 40000
 # docker run --restart=on-failure:10 --name redis -p 6379:6379 -d  redis:latest redis-server /usr/local/etc/redis/redis.conf --appendonly yes --requirepass "68270854"

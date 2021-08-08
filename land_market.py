@@ -1,13 +1,11 @@
-import time
+import copy
 import json
 import os
-import re
-import requests
-import copy
-import pandas as pd
+import time
+
 import click
-import pefile
-pefile.RESOURCE_TYPE
+import pandas as pd
+import requests
 from bs4 import BeautifulSoup
 from lxml import etree
 from selenium import webdriver
@@ -35,7 +33,7 @@ def save_json(mapping, save_path):
 
 def save_csv(mapping, save_path):
     columns = ['宗地编号', '宗地总面积', '宗地坐落', '出让年限', '容积率', '建筑密度', '绿化率',
-               '建筑限高', '主要用途',  '面积', '投资强度', '保证金', '估价报告备案号',
+               '建筑限高', '主要用途', '面积', '投资强度', '保证金', '估价报告备案号',
                '起始价', '加价幅度', '挂牌开始时间', '挂牌截止时间']
     df = pd.DataFrame([mapping])
     if os.path.exists(save_path):

@@ -8,19 +8,19 @@ Created on 2020/7/26 10:32
 
 @ModifyRecord:
 """
-import time
 import json
 import random
-import requests
-import js2xml
-import click
-
+import time
 from collections import OrderedDict
+from dataclasses import dataclass
+from typing import Optional
+
+import click
+import js2xml
+import requests
+from loguru import logger
 from lxml import etree
 from retry import retry
-from typing import Optional
-from dataclasses import dataclass
-from loguru import logger
 
 from tools import ua_list
 
