@@ -48,23 +48,50 @@ def save_dict_to_csv(mapping, save_path, columns):
         df.to_csv(save_path, mode="a", index=False, header=True, columns=columns)
 
 
-def merge_multiple_file(path_list, save_path):
-    columns = None
-    with open(path_list[0], "r") as f:
+def get_column_name(path):
+    with open(path, "r") as f:
         for line in f:
             _dict = json.loads(line)
-            if isinstance(_dict, dict):
-                columns = list(_dict.keys())
+            if not isinstance(_dict, dict):
+                continue
+            return list(_dict.keys())
 
+
+def merge_multiple_csv(path_list, save_path):
+    df_total = None
+    column_name = None
+    df_list = []
+    for path in path_list:
+        df = pd.read_csv(path)
+        if not column_name:
+            column_name = list(df.columns)
+        df = df[column_name]
+        df_list.append(df)
+
+    df_total = pd.concat(df_list)
+    df_total = df_total.drop_duplicates(subset=["房间代号"], keep="first")
+    df_total.to_csv(save_path)
+
+
+def merge_multiple_file(path_list, save_path):
+    """ 合并多个txt文件 并保存为csv文件"""
+    columns = None
+    if not isinstance(path_list, list):
+        path_list = [path_list]
+
+    columns = get_column_name(path_list[0])
     if not columns:
         return
 
     for path in path_list:
         with open(path, "r") as f:
-            for line in f:
-                _dict = json.loads(line)
-                if isinstance(_dict, dict):
-                    save_dict_to_csv(_dict, save_path, columns)
+            for idx, line in enumerate(f):
+                try:
+                    _dict = json.loads(line)
+                    if isinstance(_dict, dict):
+                        save_dict_to_csv(_dict, save_path, columns)
+                except Exception as err:
+                    logger.error(f"{path}, {idx}, {err}, {line}")
 
 
 def custom_format(path, typ, save_file_type):

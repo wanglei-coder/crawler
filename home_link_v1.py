@@ -24,13 +24,16 @@ class HomeLinkSpiderV1(HomeLinkSpider):
         self.use_redis = use_redis
         self.redis_client = None
 
-    def get_url_list(self):
+    def get_url_list(self, district_name_list=None):
         logger.info("start getting url")
         districts = self.get_districts()
+
         if not districts:
             logger.error("没有区级区域", districts)
             return
         for district in districts:
+            if district.name not in district_name_list:
+                continue
             try:
                 counties = self.get_counties(district)
                 if not counties:
@@ -130,6 +133,15 @@ class HomeLinkSpiderV1(HomeLinkSpider):
 
         self.start_crawler_house_list(self.url_list)
 
+    def start_crawler_by_district_name(self, district_name_list):
+        if isinstance(district_name_list, str):
+            district_name_list = [district_name_list]
+        self.get_url_list(district_name_list=district_name_list)
+        length = len(self.url_list)
+        logger.info(f"self.url_list: {length}")
+
+        self.start_crawler_house_list(self.url_list)
+
     def start_crawler_house_list(self, house_list):
         for house in house_list:
             self.start_crawler_house(house)
@@ -185,7 +197,5 @@ def main(city_abbreviation, source, file, start, end):
 if __name__ == '__main__':
     main()
 # python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 60000
-# python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 2400 --end 20000
-# python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 40000 --end 60000
-# python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 20000 --end 40000
+
 # docker run --restart=on-failure:10 --name redis -p 6379:6379 -d  redis:latest redis-server /usr/local/etc/redis/redis.conf --appendonly yes --requirepass "68270854"
