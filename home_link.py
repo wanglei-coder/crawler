@@ -206,6 +206,7 @@ class HomeLinkSpider:
                 "浏览次数": query_modify("浏览次数"),
                 "关注人数": query_modify("关注人数"),
                 "成交小区均价": query_modify("成交小区均价"),
+                "网址":house.url,
             }
             return item
         except Exception as err:

@@ -175,14 +175,8 @@ class HomeLinkSpiderV1(HomeLinkSpider):
         custom_format(path=f"{self.city_abbreviation}.txt", typ="ershoufang", save_file_type="csv")
 
 
-@click.command()
-@click.option("--city_abbreviation", help="A brief spelling of Chinese city names", default="bd")
-@click.option("--source", help="A brief spelling of Chinese city names", default=None)
-@click.option("--file", help="A brief spelling of Chinese city names", default="cd.json")
-@click.option("--start", help="A brief spelling of Chinese city names", default=0)
-@click.option("--end", help="A brief spelling of Chinese city names", default=0)
-def main(city_abbreviation, source, file, start, end):
-    if not source:
+def crawler_home_link(city_abbreviation, source, file, start, end):
+    if source == "":
         HomeLinkSpiderV1(city_abbreviation, use_redis=False).start_crawler()
         return
 
@@ -194,8 +188,20 @@ def main(city_abbreviation, source, file, start, end):
         HomeLinkSpiderV1(city_abbreviation).start_crawler_from_redis()
 
 
+@click.command()
+@click.option("--city_abbreviation", help="A brief spelling of Chinese city names", default="bd")
+@click.option("--source", help="A brief spelling of Chinese city names", default="")
+@click.option("--file", help="A brief spelling of Chinese city names", default="cd.json")
+@click.option("--start", help="A brief spelling of Chinese city names", default=0)
+@click.option("--end", help="A brief spelling of Chinese city names", default=0)
+def main(city_abbreviation, source, file, start, end):
+    """
+    python home_link_v1.py --city_abbreviation gz
+    python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 60000
+    """
+    crawler_home_link(city_abbreviation, source, file, start, end)
+
+
 if __name__ == '__main__':
     main()
 # python home_link_v1.py --city_abbreviation gz --source file --file gz_url_list.json --start 60000
-
-# docker run --restart=on-failure:10 --name redis -p 6379:6379 -d  redis:latest redis-server /usr/local/etc/redis/redis.conf --appendonly yes --requirepass "68270854"

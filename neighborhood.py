@@ -30,19 +30,19 @@ def get_useragent():
     return random.choice(ua_list)
 
 
-@retry(tries=5, delay=1)
-def requests_get(url):
-    """ 增加headers 和 proxies
-
-    Parameters
-    ----------
-    url : str, url 链接
-    """
-    headers = {'User-Agent': get_useragent(), }
-    response = requests.get(url=url, headers=headers)
-    if response.status_code != requests.codes.ok:
-        raise Exception('request_get error!!!!')
-    return response
+# @retry(tries=5, delay=1)
+# def requests_get(url):
+#     """ 增加headers 和 proxies
+#
+#     Parameters
+#     ----------
+#     url : str, url 链接
+#     """
+#     headers = {'User-Agent': get_useragent(), }
+#     response = requests.get(url=url, headers=headers)
+#     if response.status_code != requests.codes.ok:
+#         raise Exception('request_get error!!!!')
+#     return response
 
 
 @dataclass
@@ -81,6 +81,8 @@ class Neighborhood(Location, DetailInfo):
 
     def as_dict(self):
         return OrderedDict({
+            "经度": self.lng,
+            "纬度": self.lat,
             "城市": self.city_name,
             "行政区": self.district,
             "板块": self.county,
@@ -94,8 +96,7 @@ class Neighborhood(Location, DetailInfo):
             "开发商": self.property_developers,
             "楼栋总数(栋)": self.num_building,
             "房屋总数(户)": self.num_house,
-            "经度": self.lng,
-            "纬度": self.lat,
+            "网址": self.url,
         })
 
 
@@ -146,32 +147,27 @@ class NeighborhoodSpider:
         self.typ = typ
 
     def get_districts(self):
-        selector = etree.HTML(requests_get(self.sub_domain).text)
-        return [Region(item.text, item.attrib["href"]) for item in
-                selector.xpath(Xpath.district)]
+        selector = etree.HTML(requests.get(self.sub_domain).text)
+        return [Region(item.text, item.attrib["href"]) for item in selector.xpath(Xpath.district)]
 
     def get_counties(self, region: Region):
         url = self.domain + region.url
-        selector = etree.HTML(requests_get(url).text)
-        return [Region(item.text, item.attrib["href"]) for item in
-                selector.xpath(Xpath.county)]
+        selector = etree.HTML(requests.get(url).text)
+        return [Region(item.text, item.attrib["href"]) for item in selector.xpath(Xpath.county)]
 
     def get_total_page(self, region: Region):
         try:
             url = self.domain + region.url
-            selector = etree.HTML(requests_get(url).text)
-            attrib = json.loads(selector.xpath(
-                Xpath.total_page)[0].attrib["page-data"])
+            selector = etree.HTML(requests.get(url).text)
+            attrib = json.loads(selector.xpath(Xpath.total_page)[0].attrib["page-data"])
             return attrib["totalPage"]
         except Exception as err:
             logger.error(err)
 
     @staticmethod
     def get_neighborhood_from_current_page(url):
-        selector = etree.HTML(requests_get(url).text)
-        return [Neighborhood(name=item.text, url=item.attrib["href"]) for item
-                in
-                selector.xpath(Xpath.neighborhood)]
+        selector = etree.HTML(requests.get(url).text)
+        return [Neighborhood(name=item.text, url=item.attrib["href"]) for item in selector.xpath(Xpath.neighborhood)]
 
     @staticmethod
     def selector_xpath(selector, pattern):
@@ -182,22 +178,15 @@ class NeighborhoodSpider:
             return None
 
     def get_neighborhood_detail_info(self, neighborhood: Neighborhood):
-        selector = etree.HTML(requests_get(neighborhood.url).text)
-        neighborhood.building_age = self.selector_xpath(
-            selector, Xpath.building_age)
-        neighborhood.building_types = self.selector_xpath(
-            selector, Xpath.building_types)
-        neighborhood.property_cost = self.selector_xpath(
-            selector, Xpath.property_cost)
-        neighborhood.property_company = self.selector_xpath(
-            selector, Xpath.property_company)
-        neighborhood.property_developers = self.selector_xpath(
-            selector, Xpath.property_developers)
-        neighborhood.num_building = self.selector_xpath(
-            selector, Xpath.num_building)
+        selector = etree.HTML(requests.get(neighborhood.url).text)
+        neighborhood.building_age = self.selector_xpath(selector, Xpath.building_age)
+        neighborhood.building_types = self.selector_xpath(selector, Xpath.building_types)
+        neighborhood.property_cost = self.selector_xpath(selector, Xpath.property_cost)
+        neighborhood.property_company = self.selector_xpath(selector, Xpath.property_company)
+        neighborhood.property_developers = self.selector_xpath(selector, Xpath.property_developers)
+        neighborhood.num_building = self.selector_xpath(selector, Xpath.num_building)
         neighborhood.num_house = self.selector_xpath(selector, Xpath.num_house)
-        neighborhood.unit_price = self.selector_xpath(
-            selector, Xpath.unit_price)
+        neighborhood.unit_price = self.selector_xpath(selector, Xpath.unit_price)
         try:
             lng_lat_script = selector.xpath(Xpath.lng_lat_script)[0]
             lng, lat, _ = self.get_lng_lat(lng_lat_script)

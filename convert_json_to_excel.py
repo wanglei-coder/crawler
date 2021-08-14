@@ -34,6 +34,7 @@ def convert_json_to_excel(path, typ):
 
 
 def convert_json_to_csv(path, typ):
+    """ 转换json成csv"""
     df, dirname, name = load_data(path)
     save_name = os.path.join(dirname, f"{name}_{typ}.csv")
     df.to_csv(save_name)
@@ -94,7 +95,7 @@ def merge_multiple_file(path_list, save_path):
                     logger.error(f"{path}, {idx}, {err}, {line}")
 
 
-def custom_format(path, typ, save_file_type):
+def custom_format(path, typ, save_file_type="csv"):
     """ 转换文件成csv"""
     if save_file_type == "txt":
         return
