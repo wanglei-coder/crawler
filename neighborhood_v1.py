@@ -39,6 +39,7 @@ class NeighborhoodSpiderV1(NeighborhoodSpider):
             yield Neighborhood(name=item.text, url=item.attrib["href"])
 
     def start_crawler_neighborhood_list(self):
+        _url_list = []
         save_path_url = f"{self.save_path_name}.json"  # 保存爬取的链接
         for counties, district in self.get_counties_list():
             # if district.name in ["通州", "东城", "西城", "朝阳", "海淀", "丰台", "石景山"]:
@@ -52,6 +53,9 @@ class NeighborhoodSpiderV1(NeighborhoodSpider):
                     time.sleep(4)
                     for neighborhood in self.get_neighborhood_from_current_page(page_url):
                         try:
+                            if neighborhood.url in _url_list:
+                                continue
+                            _url_list.append(neighborhood.url)
                             neighborhood.county = county.name
                             neighborhood.district = district.name
                             neighborhood.city_name = self.city_zh_name
@@ -62,11 +66,9 @@ class NeighborhoodSpiderV1(NeighborhoodSpider):
                             logger.error(err)
                         finally:
                             time.sleep(0)
-
         self.get_all_neighborhood()
 
     def get_neighborhood_list_from_file(self, filename):
-        _url_list = []
         with open(filename, "rb") as f:
             for idx, line in enumerate(f):
                 try:
@@ -77,16 +79,13 @@ class NeighborhoodSpiderV1(NeighborhoodSpider):
                     logger.error(err)
                     continue
                 neighborhood = Neighborhood(**_dict)
-                if neighborhood.url not in _url_list:
-                    self.neighborhood_list.append(neighborhood)
-                    _url_list.append(neighborhood.url)
-        logger.info(f"neighborhood_list: {len(self.neighborhood_list)}")
+                self.neighborhood_list.append(neighborhood)
 
-    def get_neighborhood(self, neighborhood: Neighborhood, idx=0):
+    def get_neighborhood(self, neighborhood: Neighborhood, idx=0, total_length=0):
         save_path = f"{self.save_path_name}.txt"
         try:
             neighborhood = self.get_neighborhood_detail_info(neighborhood)
-            logger.info(f"idx: {idx}, {neighborhood}")
+            logger.info(f"idx: {idx}:{total_length}, {neighborhood}")
             self.save_json(neighborhood.as_dict(), save_path)
         except Exception as err:
             logger.error(err)
@@ -96,17 +95,25 @@ class NeighborhoodSpiderV1(NeighborhoodSpider):
     def get_all_neighborhood(self, start=0, end=0):
         if end == 0:
             end = 1 << 64
+        if start > end:
+            start, end = end, start
+
         _url_list = []
         neighborhood_list = []
         # 去重
         for neighborhood in self.neighborhood_list:
-            if neighborhood.url not in _url_list:
-                neighborhood_list.append(neighborhood)
-        del _url_list
-        for idx, neighborhood in enumerate(neighborhood_list):
-            if not start <= idx <= end:
+            if neighborhood.url in _url_list:
                 continue
-            self.get_neighborhood(neighborhood, idx)
+            _url_list.append(neighborhood.url)
+            neighborhood_list.append(neighborhood)
+        del _url_list
+
+        neighborhood_list = neighborhood_list[start: end]
+
+        total_length = len(neighborhood_list)
+        logger.info(f"neighborhood_list: {total_length}, self.neighborhood_list: {len(self.neighborhood_list)}")
+        for idx, neighborhood in enumerate(neighborhood_list):
+            self.get_neighborhood(neighborhood, idx, total_length)
         custom_format(f"{self.save_path_name}.txt", self.typ)
 
     def start_crawler_from_file(self, filename, start=0, end=0):
